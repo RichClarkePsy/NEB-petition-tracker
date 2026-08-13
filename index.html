@@ -753,7 +753,7 @@
         <div class="panel">
           <p class="label">Live signatures</p>
           <div class="split-count" id="signatureCount" aria-live="polite" aria-label="66,492 signatures"></div>
-          <p class="stat-copy" id="countCaption">This petition is climbing through this 5,000-signature bracket.</p>
+          <p class="stat-copy" id="countCaption">This petition is climbing through the current signature bracket.</p>
         </div>
 
         <div class="panel">
@@ -788,7 +788,7 @@
       <div class="visual-stack">
         <section class="chart-shell" aria-label="Petition progress ladder">
           <div class="chart-head">
-            <span id="windowLabel">Showing the current 5,000-signature bracket</span>
+            <span id="windowLabel">Showing the current signature bracket</span>
           </div>
           <svg id="ladder" viewBox="0 0 940 780" role="img" aria-labelledby="chartTitle chartDesc">
             <title id="chartTitle">Live petition signature progress</title>
@@ -837,7 +837,6 @@
     const PETITION_JSON_URL = `${PETITION_URL}.json`;
     const POLL_MS = 30000;
     const HISTORY_REFRESH_MS = 5 * 60 * 1000;
-    const RANGE_SIZE = 5000;
     const DEBATE_THRESHOLD = 100000;
     const DEADLINE = new Date(2026, 10, 20);
 
@@ -1062,9 +1061,19 @@
       });
     }
 
+    function getRangeSize(count) {
+      if (count >= 100000 && count < 150000) return 500;
+      return 5000;
+    }
+
+    function getTickStep(rangeSize) {
+      return rangeSize <= 500 ? 100 : 1000;
+    }
+
     function getRange(count) {
-      const yMin = Math.floor(count / RANGE_SIZE) * RANGE_SIZE;
-      return { yMin, yMax: yMin + RANGE_SIZE };
+      const rangeSize = getRangeSize(count);
+      const yMin = Math.floor(count / rangeSize) * rangeSize;
+      return { yMin, yMax: yMin + rangeSize, rangeSize };
     }
 
     function yScale(value, yMin, yMax) {
@@ -1073,9 +1082,9 @@
       return bottom - ((value - yMin) / (yMax - yMin)) * (bottom - top);
     }
 
-    function bracketTicks(yMin, yMax) {
+    function bracketTicks(yMin, yMax, tickStep) {
       const ticks = [];
-      for (let value = yMin; value <= yMax; value += 1000) ticks.push(value);
+      for (let value = yMin; value <= yMax; value += tickStep) ticks.push(value);
       return ticks;
     }
 
@@ -1087,7 +1096,8 @@
 
       const count = state.count;
       const next = findNextTarget(count);
-      const { yMin, yMax } = getRange(count);
+      const { yMin, yMax, rangeSize } = getRange(count);
+      const tickStep = getTickStep(rangeSize);
       const visible = state.benchmarks
         .filter(item => item.id !== PETITION_ID && item.signatures >= yMin && item.signatures <= yMax)
         .sort((a, b) => a.signatures - b.signatures);
@@ -1118,7 +1128,7 @@
       els.rankNumber.textContent = ordinal(rank);
       els.rankText.textContent = `This petition is currently the ${ordinal(rank)} most signed petition of all time.`;
       els.countCaption.textContent = `This petition is in the ${formatNumber.format(yMin)}-${formatNumber.format(yMax)} signature bracket.`;
-      els.windowLabel.textContent = `Scale: ${formatNumber.format(yMin)} to ${formatNumber.format(yMax)} signatures`;
+      els.windowLabel.textContent = `Scale: ${formatNumber.format(yMin)} to ${formatNumber.format(yMax)} signatures (${formatNumber.format(rangeSize)} range)`;
 
       svg.appendChild(make("rect", {
         x: 0,
@@ -1129,7 +1139,7 @@
         opacity: "0.92"
       }));
 
-      for (const tick of bracketTicks(yMin, yMax)) {
+      for (const tick of bracketTicks(yMin, yMax, tickStep)) {
         const y = yScale(tick, yMin, yMax);
         svg.appendChild(make("line", { x1: 92, x2: 880, y1: y, y2: y, class: "grid-line" }));
         svg.appendChild(make("text", { x: 82, y: y + 7, class: "axis-text", "text-anchor": "end" }, formatNumber.format(tick)));
