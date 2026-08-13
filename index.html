@@ -493,7 +493,7 @@
     .current-dot-outer {
       fill: var(--bg);
       stroke: var(--blue-deep);
-      stroke-width: 12;
+      stroke-width: 8;
     }
 
     .current-dot {
@@ -836,6 +836,7 @@
     const PETITION_URL = `https://petition.parliament.uk/petitions/${PETITION_ID}`;
     const PETITION_JSON_URL = `${PETITION_URL}.json`;
     const POLL_MS = 30000;
+    const HISTORY_REFRESH_MS = 5 * 60 * 1000;
     const RANGE_SIZE = 5000;
     const DEBATE_THRESHOLD = 100000;
     const DEADLINE = new Date(2026, 10, 20);
@@ -1149,8 +1150,8 @@
       }
 
       svg.appendChild(make("line", { x1: 222, x2: 442, y1: currentY, y2: currentY, class: "current-line" }));
-      svg.appendChild(make("circle", { cx: 332, cy: currentY, r: 28, class: "current-dot-outer" }));
-      svg.appendChild(make("circle", { cx: 332, cy: currentY, r: 18, class: "current-dot" }));
+      svg.appendChild(make("circle", { cx: 332, cy: currentY, r: 21, class: "current-dot-outer" }));
+      svg.appendChild(make("circle", { cx: 332, cy: currentY, r: 13, class: "current-dot" }));
 
       for (const row of rows) {
         const y = yScale(row.signatures, yMin, yMax);
@@ -1401,6 +1402,13 @@
       els.statusText.textContent = message;
     }
 
+    async function loadHistory() {
+      const historyResponse = await fetch(`history.json?cache=${Date.now()}`, { cache: "no-store" });
+      if (!historyResponse.ok) throw new Error(`Could not load history: HTTP ${historyResponse.status}`);
+      state.history = await historyResponse.json();
+      renderTrendChart();
+    }
+
     async function updatePetition() {
       els.refreshButton.disabled = true;
       try {
@@ -1433,10 +1441,7 @@
         if (!response.ok) throw new Error(`Could not load benchmarks: HTTP ${response.status}`);
         state.benchmarks = await response.json();
         try {
-          const historyResponse = await fetch("history.json", { cache: "no-store" });
-          if (historyResponse.ok) {
-            state.history = await historyResponse.json();
-          }
+          await loadHistory();
         } catch (historyError) {
           state.history = [];
         }
@@ -1444,12 +1449,24 @@
         renderTrendChart();
         await updatePetition();
         setInterval(updatePetition, POLL_MS);
+        setInterval(() => {
+          loadHistory().catch(() => {
+            renderTrendChart();
+          });
+        }, HISTORY_REFRESH_MS);
       } catch (error) {
         updateStatus(false, error.message);
       }
     }
 
-    els.refreshButton.addEventListener("click", updatePetition);
+    els.refreshButton.addEventListener("click", async () => {
+      try {
+        await loadHistory();
+      } catch (historyError) {
+        renderTrendChart();
+      }
+      await updatePetition();
+    });
     window.addEventListener("resize", () => {
       renderChart();
       renderTrendChart();
