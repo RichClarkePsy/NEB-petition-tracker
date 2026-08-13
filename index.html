@@ -1153,7 +1153,7 @@
         const gap = target.signatures - count;
         const meta = gap === 0
           ? `Level on ${formatNumber.format(target.signatures)} - 1 signature to pass`
-          : `${formatNumber.format(gap)} signatures to pass ${formatNumber.format(target.signatures)}`;
+          : `${formatNumber.format(gap + 1)} signatures to pass ${formatNumber.format(target.signatures)}`;
         els.overtakeList.appendChild(createOvertakeItem({
           className: "is-next",
           eyebrow: index === 0 ? "Next overtake" : `Next overtake ${index + 1}`,
