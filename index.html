@@ -536,6 +536,15 @@
       text-underline-offset: 3px;
     }
 
+    .fireworks-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 20;
+    }
+
     .trend-panel {
       padding: 16px;
     }
@@ -830,6 +839,7 @@
     <p class="foot" id="footerNote">The page checks the official UK Parliament petition JSON every 30 seconds.</p>
     <p class="site-credit">Made by <a href="https://www.linkedin.com/in/richard-clarke-ba627a3a5/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3BYa%2FnjQQCRwODgrupsiveTw%3D%3D" target="_blank" rel="noreferrer">Richard Clarke</a>.</p>
   </main>
+  <canvas class="fireworks-canvas" id="fireworksCanvas" aria-hidden="true"></canvas>
 
   <script>
     const PETITION_ID = "767687";
@@ -847,7 +857,10 @@
       previousDisplay: "",
       title: "Hold a UK-wide briefing on climate and nature risks",
       status: "open",
-      lastChecked: null
+      lastChecked: null,
+      hasLoadedLive: false,
+      fireworks: [],
+      fireworksAnimation: null
     };
 
     const els = {
@@ -870,6 +883,7 @@
       trendRate: document.getElementById("trendRate"),
       trendProjection: document.getElementById("trendProjection"),
       trendChart: document.getElementById("trendChart"),
+      fireworksCanvas: document.getElementById("fireworksCanvas"),
       refreshButton: document.getElementById("refreshButton")
     };
 
@@ -1011,6 +1025,94 @@
       const days = Math.max(0, Math.ceil((DEADLINE.getTime() - now.getTime()) / 86400000));
       const dayText = days === 1 ? "day" : "days";
       els.deadlineBadge.textContent = `${days} ${dayText} until 20 Nov deadline`;
+    }
+
+    function resizeFireworksCanvas() {
+      const canvas = els.fireworksCanvas;
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = Math.ceil(window.innerWidth * ratio);
+      canvas.height = Math.ceil(window.innerHeight * ratio);
+      canvas.style.width = `${window.innerWidth}px`;
+      canvas.style.height = `${window.innerHeight}px`;
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+
+    function createFireworkBurst(x, y, strength = 1) {
+      const colours = ["#ffb545", "#39a7ff", "#52d273", "#ffffff", "#ee0000"];
+      const particleCount = Math.min(90, 38 + (strength * 12));
+
+      for (let index = 0; index < particleCount; index += 1) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 2 + Math.random() * (4.5 + strength);
+        state.fireworks.push({
+          x,
+          y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 46 + Math.random() * 24,
+          age: 0,
+          radius: 2 + Math.random() * 2.8,
+          colour: colours[index % colours.length]
+        });
+      }
+    }
+
+    function animateFireworks() {
+      const canvas = els.fireworksCanvas;
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+      state.fireworks = state.fireworks.filter(particle => particle.age < particle.life);
+
+      for (const particle of state.fireworks) {
+        particle.age += 1;
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+        particle.vy += 0.06;
+        particle.vx *= 0.985;
+        particle.vy *= 0.985;
+
+        const alpha = Math.max(0, 1 - (particle.age / particle.life));
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = particle.colour;
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.radius * alpha, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.globalAlpha = 1;
+
+      if (state.fireworks.length) {
+        state.fireworksAnimation = requestAnimationFrame(animateFireworks);
+      } else {
+        state.fireworksAnimation = null;
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      }
+    }
+
+    function triggerFireworks(overtakeCount) {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      if (!els.fireworksCanvas.width || !els.fireworksCanvas.height) resizeFireworksCanvas();
+
+      const bursts = Math.min(4, Math.max(1, overtakeCount));
+      for (let index = 0; index < bursts; index += 1) {
+        const x = window.innerWidth * (0.25 + Math.random() * 0.5);
+        const y = window.innerHeight * (0.18 + Math.random() * 0.36);
+        window.setTimeout(() => createFireworkBurst(x, y, overtakeCount), index * 160);
+      }
+
+      if (!state.fireworksAnimation) {
+        state.fireworksAnimation = requestAnimationFrame(animateFireworks);
+      }
+    }
+
+    function countNewOvertakes(previousCount, nextCount) {
+      if (!state.benchmarks.length || nextCount <= previousCount) return 0;
+      return state.benchmarks.filter(item => {
+        if (item.id === PETITION_ID) return false;
+        return item.signatures >= previousCount && item.signatures < nextCount;
+      }).length;
     }
 
     function createOvertakeItem({ className, eyebrow, title, meta }) {
@@ -1441,16 +1543,20 @@
         const json = await response.json();
         const attrs = json.data.attributes;
         const nextCount = Number(attrs.signature_count);
+        const previousCount = state.count;
+        const overtakeCount = state.hasLoadedLive ? countNewOvertakes(previousCount, nextCount) : 0;
         state.title = attrs.action || state.title;
         state.status = attrs.state || state.status;
         state.lastChecked = new Date();
         state.count = nextCount;
+        state.hasLoadedLive = true;
         els.petitionTitle.textContent = state.title;
         document.title = state.title;
         updateStatus(true, `${state.status} - checked ${formatTime.format(state.lastChecked)}`);
         els.footerNote.textContent = `Live source: ${PETITION_JSON_URL}`;
         renderChart();
         renderTrendChart();
+        if (overtakeCount > 0) triggerFireworks(overtakeCount);
       } catch (error) {
         updateStatus(false, "Could not update - showing last count");
         els.footerNote.textContent = `Last update failed: ${error.message}`;
@@ -1491,7 +1597,9 @@
       }
       await updatePetition();
     });
+    resizeFireworksCanvas();
     window.addEventListener("resize", () => {
+      resizeFireworksCanvas();
       renderChart();
       renderTrendChart();
     });
