@@ -978,12 +978,12 @@
     }
 
     function findNextTarget(count) {
-      return state.benchmarks.find(item => item.id !== PETITION_ID && item.signatures > count) || null;
+      return state.benchmarks.find(item => item.id !== PETITION_ID && item.signatures >= count) || null;
     }
 
     function findNextTargets(count, limit = 3) {
       return state.benchmarks
-        .filter(item => item.id !== PETITION_ID && item.signatures > count)
+        .filter(item => item.id !== PETITION_ID && item.signatures >= count)
         .slice(0, limit);
     }
 
@@ -1049,11 +1049,15 @@
       }
 
       findNextTargets(count, 3).forEach((target, index) => {
+        const gap = target.signatures - count;
+        const meta = gap === 0
+          ? `Level on ${formatNumber.format(target.signatures)} - 1 signature to pass`
+          : `${formatNumber.format(gap)} signatures to pass ${formatNumber.format(target.signatures)}`;
         els.overtakeList.appendChild(createOvertakeItem({
           className: "is-next",
           eyebrow: index === 0 ? "Next overtake" : `Next overtake ${index + 1}`,
           title: `${target.year}: ${target.title}`,
-          meta: `${formatNumber.format(target.signatures - count)} signatures to pass ${formatNumber.format(target.signatures)}`
+          meta
         }));
       });
     }
@@ -1090,7 +1094,7 @@
       const rows = [
         ...visible.map(item => ({
           ...item,
-          relation: item.signatures > count ? "target" : "passed"
+          relation: item.signatures >= count ? "target" : "passed"
         })),
         {
           id: PETITION_ID,
@@ -1145,7 +1149,7 @@
 
       for (const item of visible) {
         const y = yScale(item.signatures, yMin, yMax);
-        const lineClass = item.signatures > count ? "target-line" : "tick-line";
+        const lineClass = item.signatures >= count ? "target-line" : "tick-line";
         svg.appendChild(make("line", { x1: 254, x2: 410, y1: y, y2: y, class: lineClass }));
       }
 
