@@ -1,0 +1,428 @@
+[
+  {
+    "observed_at": "2026-05-22T10:32:20.000Z",
+    "signatures": 13210,
+    "source_updated_at": "2026-05-22T10:32:20.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-05-22T12:24:10.000Z",
+    "signatures": 13434,
+    "source_updated_at": "2026-05-22T12:24:10.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-05-24T08:28:40.000Z",
+    "signatures": 15390,
+    "source_updated_at": "2026-05-24T08:28:40.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-05-25T13:05:40.000Z",
+    "signatures": 16243,
+    "source_updated_at": "2026-05-25T13:05:40.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-05-26T18:23:10.000Z",
+    "signatures": 17049,
+    "source_updated_at": "2026-05-26T18:23:10.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-05-27T17:08:30.000Z",
+    "signatures": 17513,
+    "source_updated_at": "2026-05-27T17:08:30.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-05-29T07:44:30.000Z",
+    "signatures": 18135,
+    "source_updated_at": "2026-05-29T07:44:30.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-05-30T12:45:00.000Z",
+    "signatures": 18540,
+    "source_updated_at": "2026-05-30T12:45:00.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-05-31T20:29:30.000Z",
+    "signatures": 18882,
+    "source_updated_at": "2026-05-31T20:29:30.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-03T08:21:10.000Z",
+    "signatures": 19564,
+    "source_updated_at": "2026-06-03T08:21:10.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-04T16:34:30.000Z",
+    "signatures": 19933,
+    "source_updated_at": "2026-06-04T16:34:30.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-05T12:58:50.000Z",
+    "signatures": 20095,
+    "source_updated_at": "2026-06-05T12:58:50.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-06T10:06:00.000Z",
+    "signatures": 20404,
+    "source_updated_at": "2026-06-06T10:06:00.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-07T09:38:00.000Z",
+    "signatures": 20589,
+    "source_updated_at": "2026-06-07T09:38:00.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-08T07:27:00.000Z",
+    "signatures": 20716,
+    "source_updated_at": "2026-06-08T07:27:00.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-09T16:14:30.000Z",
+    "signatures": 20968,
+    "source_updated_at": "2026-06-09T16:14:30.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-10T18:22:30.000Z",
+    "signatures": 21229,
+    "source_updated_at": "2026-06-10T18:22:30.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-12T15:19:50.000Z",
+    "signatures": 21571,
+    "source_updated_at": "2026-06-12T15:19:50.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-14T08:14:50.000Z",
+    "signatures": 21795,
+    "source_updated_at": "2026-06-14T08:14:50.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-15T16:50:00.000Z",
+    "signatures": 22121,
+    "source_updated_at": "2026-06-15T16:50:00.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-16T16:15:50.000Z",
+    "signatures": 22530,
+    "source_updated_at": "2026-06-16T16:15:50.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-17T16:51:30.000Z",
+    "signatures": 23886,
+    "source_updated_at": "2026-06-17T16:51:30.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-18T06:43:30.000Z",
+    "signatures": 24414,
+    "source_updated_at": "2026-06-18T06:43:30.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-19T06:52:10.000Z",
+    "signatures": 25046,
+    "source_updated_at": "2026-06-19T06:52:10.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-20T18:36:40.000Z",
+    "signatures": 25505,
+    "source_updated_at": "2026-06-20T18:36:40.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-21T19:28:30.000Z",
+    "signatures": 25742,
+    "source_updated_at": "2026-06-21T19:28:30.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-22T07:54:30.000Z",
+    "signatures": 25825,
+    "source_updated_at": "2026-06-22T07:54:30.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-23T06:40:30.000Z",
+    "signatures": 26153,
+    "source_updated_at": "2026-06-23T06:40:30.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-23T11:40:20.000Z",
+    "signatures": 26379,
+    "source_updated_at": "2026-06-23T11:40:20.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-24T08:04:10.000Z",
+    "signatures": 26789,
+    "source_updated_at": "2026-06-24T08:04:10.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-25T06:16:10.000Z",
+    "signatures": 27305,
+    "source_updated_at": "2026-06-25T06:16:10.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-26T16:08:40.000Z",
+    "signatures": 28181,
+    "source_updated_at": "2026-06-26T16:08:40.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-27T17:12:50.000Z",
+    "signatures": 28578,
+    "source_updated_at": "2026-06-27T17:12:50.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-28T12:41:00.000Z",
+    "signatures": 28819,
+    "source_updated_at": "2026-06-28T12:41:00.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-06-30T07:15:00.000Z",
+    "signatures": 29249,
+    "source_updated_at": "2026-06-30T07:15:00.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-03T07:53:10.000Z",
+    "signatures": 30403,
+    "source_updated_at": "2026-07-03T07:53:10.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-04T08:13:10.000Z",
+    "signatures": 30688,
+    "source_updated_at": "2026-07-04T08:13:10.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-05T15:25:20.000Z",
+    "signatures": 30970,
+    "source_updated_at": "2026-07-05T15:25:20.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-07T08:40:00.000Z",
+    "signatures": 31305,
+    "source_updated_at": "2026-07-07T08:40:00.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-08T16:11:40.000Z",
+    "signatures": 31640,
+    "source_updated_at": "2026-07-08T16:11:40.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-09T15:39:20.000Z",
+    "signatures": 31872,
+    "source_updated_at": "2026-07-09T15:39:20.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-10T15:29:40.000Z",
+    "signatures": 32242,
+    "source_updated_at": "2026-07-10T15:29:40.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-11T19:11:00.000Z",
+    "signatures": 32614,
+    "source_updated_at": "2026-07-11T19:11:00.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-12T20:01:40.000Z",
+    "signatures": 32833,
+    "source_updated_at": "2026-07-12T20:01:40.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-13T15:18:20.000Z",
+    "signatures": 33098,
+    "source_updated_at": "2026-07-13T15:18:20.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-14T14:21:40.000Z",
+    "signatures": 33874,
+    "source_updated_at": "2026-07-14T14:21:40.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-15T21:25:50.000Z",
+    "signatures": 34553,
+    "source_updated_at": "2026-07-15T21:25:50.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-16T10:45:50.000Z",
+    "signatures": 34643,
+    "source_updated_at": "2026-07-16T10:45:50.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-19T13:32:10.000Z",
+    "signatures": 35438,
+    "source_updated_at": "2026-07-19T13:32:10.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-20T18:13:50.000Z",
+    "signatures": 35664,
+    "source_updated_at": "2026-07-20T18:13:50.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-21T16:06:30.000Z",
+    "signatures": 35926,
+    "source_updated_at": "2026-07-21T16:06:30.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-22T17:57:20.000Z",
+    "signatures": 36950,
+    "source_updated_at": "2026-07-22T17:57:20.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-23T15:34:30.000Z",
+    "signatures": 37392,
+    "source_updated_at": "2026-07-23T15:34:30.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-24T17:19:20.000Z",
+    "signatures": 38250,
+    "source_updated_at": "2026-07-24T17:19:20.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-26T07:06:40.000Z",
+    "signatures": 39122,
+    "source_updated_at": "2026-07-26T07:06:40.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-27T17:33:20.000Z",
+    "signatures": 40650,
+    "source_updated_at": "2026-07-27T17:33:20.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-29T07:40:40.000Z",
+    "signatures": 41547,
+    "source_updated_at": "2026-07-29T07:40:40.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-30T18:53:10.000Z",
+    "signatures": 42742,
+    "source_updated_at": "2026-07-30T18:53:10.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-07-31T11:09:00.000Z",
+    "signatures": 43287,
+    "source_updated_at": "2026-07-31T11:09:00.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-08-01T15:10:50.000Z",
+    "signatures": 43879,
+    "source_updated_at": "2026-08-01T15:10:50.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-08-02T18:51:20.000Z",
+    "signatures": 44209,
+    "source_updated_at": "2026-08-02T18:51:20.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-08-03T12:04:30.000Z",
+    "signatures": 44420,
+    "source_updated_at": "2026-08-03T12:04:30.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-08-05T19:06:50.000Z",
+    "signatures": 45840,
+    "source_updated_at": "2026-08-05T19:06:50.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-08-06T14:13:40.000Z",
+    "signatures": 47593,
+    "source_updated_at": "2026-08-06T14:13:40.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-08-07T08:52:10.000Z",
+    "signatures": 50680,
+    "source_updated_at": "2026-08-07T08:52:10.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-08-08T09:48:20.000Z",
+    "signatures": 55090,
+    "source_updated_at": "2026-08-08T09:48:20.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-08-09T07:59:30.000Z",
+    "signatures": 58642,
+    "source_updated_at": "2026-08-09T07:59:30.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-08-10T07:45:30.000Z",
+    "signatures": 61156,
+    "source_updated_at": "2026-08-10T07:45:30.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-08-11T08:25:50.000Z",
+    "signatures": 63713,
+    "source_updated_at": "2026-08-11T08:25:50.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-08-12T07:55:10.000Z",
+    "signatures": 65328,
+    "source_updated_at": "2026-08-12T07:55:10.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-08-13T09:00:55.390Z",
+    "signatures": 66553,
+    "source_updated_at": "2026-08-13T08:58:10.000Z",
+    "source": "github-action"
+  }
+]
