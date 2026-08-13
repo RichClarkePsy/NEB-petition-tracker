@@ -47,8 +47,8 @@
 
     header {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 18px;
+      grid-template-columns: 1fr;
+      gap: 14px;
       align-items: end;
       border-bottom: 2px solid var(--line);
       padding-bottom: 20px;
@@ -57,7 +57,7 @@
 
     h1 {
       margin: 0;
-      max-width: 950px;
+      max-width: none;
       font-size: clamp(2rem, 4.4vw, 4.7rem);
       line-height: 0.98;
       letter-spacing: 0;
@@ -184,8 +184,8 @@
       position: relative;
       display: inline-grid;
       place-items: center;
-      min-width: clamp(34px, 6.1vw, 64px);
-      height: clamp(52px, 9.4vw, 88px);
+      min-width: clamp(28px, 5.2vw, 55px);
+      height: clamp(46px, 8.2vw, 78px);
       padding: 0 0.12em;
       overflow: hidden;
       border: 1px solid #06090c;
@@ -198,7 +198,7 @@
         0 10px 22px rgba(0, 0, 0, 0.3);
       color: var(--text);
       font-family: "Courier New", ui-monospace, SFMono-Regular, Consolas, monospace;
-      font-size: clamp(2.2rem, 7vw, 5.2rem);
+      font-size: clamp(1.9rem, 5.8vw, 4.45rem);
       font-weight: 900;
       line-height: 1;
       text-align: center;
@@ -212,6 +212,15 @@
       border-top: 1px solid rgba(255, 255, 255, 0.08);
       border-bottom: 1px solid rgba(0, 0, 0, 0.65);
       z-index: 2;
+    }
+
+    .flap.is-leading-zero .flap-value {
+      color: #8a8a8a;
+    }
+
+    .split-count.is-debate-reached .flap-value,
+    .split-count.is-debate-reached .separator {
+      color: var(--green);
     }
 
     .flap.flip .flap-value {
@@ -641,12 +650,6 @@
       font-weight: 850;
     }
 
-    .forecast-label {
-      fill: #7ec4c6;
-      font-size: 15px;
-      font-weight: 850;
-    }
-
     .trend-legend {
       display: flex;
       gap: 18px;
@@ -936,9 +939,16 @@
       parent.appendChild(textNode);
     }
 
+    function formatLiveCount(count) {
+      const digits = String(Math.max(0, Math.round(count))).padStart(6, "0");
+      return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
     function renderSplitCount(count) {
-      const formatted = formatNumber.format(count);
-      els.signatureCount.setAttribute("aria-label", `${formatted} signatures`);
+      const formatted = formatLiveCount(count);
+      const plainFormatted = formatNumber.format(count);
+      els.signatureCount.setAttribute("aria-label", `${plainFormatted} signatures`);
+      els.signatureCount.classList.toggle("is-debate-reached", count >= DEBATE_THRESHOLD);
       const previous = state.previousDisplay;
       els.signatureCount.replaceChildren();
 
@@ -946,6 +956,10 @@
         const character = formatted[index];
         const flap = document.createElement("span");
         flap.className = character === "," ? "separator" : "flap";
+
+        if (index === 0 && character === "0") {
+          flap.classList.add("is-leading-zero");
+        }
 
         const value = document.createElement("span");
         value.className = "flap-value";
@@ -1350,14 +1364,6 @@
         svg.appendChild(make("path", { d: bandPath, class: "trend-band" }));
         svg.appendChild(make("path", { d: linePath(trendLinePoints, xFor, yFor), class: "trend-line" }));
 
-        if (trend.slope > 0 && latest.signatures < DEBATE_THRESHOLD) {
-          const daysToThreshold = (DEBATE_THRESHOLD - latest.signatures) / trend.slope;
-          const reachDate = new Date(latest.date.getTime() + (daysToThreshold * 86400000));
-          if (Number.isFinite(reachDate.getTime()) && reachDate <= xMax) {
-            const reachX = xFor(reachDate);
-            svg.appendChild(make("text", { x: reachX - 8, y: thresholdY + 18, class: "forecast-label", "text-anchor": "end" }, formatShortDate.format(reachDate)));
-          }
-        }
       }
 
       svg.appendChild(make("path", { d: linePath(points, xFor, yFor), class: "trend-actual" }));
