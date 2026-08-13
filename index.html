@@ -1228,6 +1228,14 @@
         .sort((a, b) => a.date - b.date);
     }
 
+    function calendarDayNumber(date) {
+      return Math.floor(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()) / 86400000);
+    }
+
+    function daysBetween(start, end) {
+      return (end.getTime() - start.getTime()) / 86400000;
+    }
+
     function trendScale(value, from, to, minPx, maxPx) {
       if (to === from) return minPx;
       return minPx + ((value - from) / (to - from)) * (maxPx - minPx);
@@ -1235,8 +1243,8 @@
 
     function linearRegression(points) {
       if (points.length < 2) return null;
-      const base = points[0].date.getTime();
-      const xs = points.map(point => (point.date.getTime() - base) / 86400000);
+      const baseDay = calendarDayNumber(points[0].date);
+      const xs = points.map(point => calendarDayNumber(point.date) - baseDay);
       const ys = points.map(point => point.signatures);
       const xMean = xs.reduce((sum, value) => sum + value, 0) / xs.length;
       const yMean = ys.reduce((sum, value) => sum + value, 0) / ys.length;
@@ -1246,10 +1254,10 @@
       const slope = numerator / denominator;
       const intercept = yMean - (slope * xMean);
       return {
-        base,
+        baseDay,
         slope,
         predict(date) {
-          const x = (date.getTime() - base) / 86400000;
+          const x = calendarDayNumber(date) - baseDay;
           return intercept + (slope * x);
         }
       };
@@ -1278,29 +1286,31 @@
       svg.appendChild(make("title", { id: "trendTitle" }, "When could the petition reach 100,000 signatures?"));
       svg.appendChild(make("desc", { id: "trendDesc" }, "A line chart showing saved signature counts, a thirty day trend, the 100,000 signature threshold, and the petition closing date."));
 
-      const points = getTrendPoints();
       const savedPoints = getSavedHistoryPoints();
       const lastSaved = savedPoints[savedPoints.length - 1] || null;
       els.historyUpdateNote.textContent = lastSaved
         ? `Graph history updates every three hours. Last saved update: ${formatDate.format(lastSaved.date)} at ${formatTime.format(lastSaved.date)}.`
         : "Graph history updates every three hours once the site is running on GitHub.";
 
+      const points = savedPoints;
       if (points.length < 2) {
         svg.appendChild(make("text", { x: 470, y: 235, class: "trend-axis", "text-anchor": "middle" }, "Add at least two saved history points to draw the trend."));
         return;
       }
 
       const latest = points[points.length - 1];
-      const thirtyDaysAgo = new Date(latest.date.getTime() - (30 * 86400000));
-      const recent = points.filter(point => point.date >= thirtyDaysAgo);
+      const latestDay = calendarDayNumber(latest.date);
+      const recent = points.filter(point => calendarDayNumber(point.date) > latestDay - 29);
       const trendSource = recent.length >= 2 ? recent : points.slice(-Math.min(points.length, 10));
       const trend = linearRegression(trendSource);
+      const projectedAtClose = trend
+        ? latest.signatures + (trend.slope * daysBetween(latest.date, DEADLINE))
+        : latest.signatures;
       const chartEnd = new Date(2027, 0, 1);
       const xMin = points[0].date;
       const xMax = latest.date > chartEnd ? new Date(latest.date.getTime() + 86400000) : chartEnd;
-      const forecastAtClose = trend ? trend.predict(DEADLINE) : latest.signatures;
       const highestActual = Math.max(...points.map(point => point.signatures));
-      const yMax = Math.ceil((Math.max(DEBATE_THRESHOLD, highestActual, forecastAtClose) * 1.12) / 25000) * 25000;
+      const yMax = Math.ceil((Math.max(DEBATE_THRESHOLD, highestActual, projectedAtClose) * 1.12) / 25000) * 25000;
       const yMin = 0;
       const left = 88;
       const right = 900;
@@ -1339,12 +1349,13 @@
       if (trend) {
         const trendStart = trendSource[0].date;
         const trendEnd = xMax;
-        const trendDates = [trendStart, DEADLINE, trendEnd].filter((date, index, dates) => {
+        const projectFromLatest = date => latest.signatures + (trend.slope * daysBetween(latest.date, date));
+        const trendDates = [trendStart, latest.date, DEADLINE, trendEnd].filter((date, index, dates) => {
           return index === 0 || date.getTime() !== dates[index - 1].getTime();
         });
         const trendLinePoints = trendDates.map(date => ({
           date,
-          signatures: Math.max(0, trend.predict(date))
+          signatures: Math.max(0, projectFromLatest(date))
         }));
         const upper = trendLinePoints.map((point, index) => {
           const days = Math.max(0, (point.date - trendStart) / 86400000);
@@ -1374,9 +1385,8 @@
       els.trendLatestLabel.textContent = `Latest total on ${formatDate.format(latest.date)}`;
 
       if (trend) {
-        const projectedClose = Math.max(latest.signatures, Math.round(forecastAtClose));
         els.trendRate.textContent = `${formatNumber.format(Math.round(trend.slope))}/day`;
-        els.trendProjection.textContent = formatNumber.format(projectedClose);
+        els.trendProjection.textContent = formatNumber.format(Math.round(projectedAtClose));
 
         if (latest.signatures >= DEBATE_THRESHOLD) {
           els.trendIntro.textContent = "This petition has passed the 100,000 signature debate threshold.";
