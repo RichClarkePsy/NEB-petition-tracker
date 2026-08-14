@@ -762,7 +762,6 @@
         <div class="panel">
           <p class="label">Live signatures</p>
           <div class="split-count" id="signatureCount" aria-live="polite" aria-label="66,492 signatures"></div>
-          <p class="stat-copy" id="countCaption">This petition is climbing through the current signature bracket.</p>
         </div>
 
         <div class="panel">
@@ -854,6 +853,7 @@
       status: "open",
       lastChecked: null,
       hasLoadedLive: false,
+      passedBenchmarkIds: new Set(),
       fireworks: [],
       fireworksAnimation: null
     };
@@ -862,7 +862,6 @@
       petitionTitle: document.getElementById("petitionTitle"),
       deadlineBadge: document.getElementById("deadlineBadge"),
       signatureCount: document.getElementById("signatureCount"),
-      countCaption: document.getElementById("countCaption"),
       rankNumber: document.getElementById("rankNumber"),
       rankText: document.getElementById("rankText"),
       overtakeList: document.getElementById("overtakeList"),
@@ -1088,24 +1087,41 @@
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       if (!els.fireworksCanvas.width || !els.fireworksCanvas.height) resizeFireworksCanvas();
 
+      const startAnimation = () => {
+        if (!state.fireworksAnimation) {
+          state.fireworksAnimation = requestAnimationFrame(animateFireworks);
+        }
+      };
+
       const bursts = Math.min(4, Math.max(1, overtakeCount));
       for (let index = 0; index < bursts; index += 1) {
         const x = window.innerWidth * (0.25 + Math.random() * 0.5);
         const y = window.innerHeight * (0.18 + Math.random() * 0.36);
-        window.setTimeout(() => createFireworkBurst(x, y, overtakeCount), index * 160);
-      }
-
-      if (!state.fireworksAnimation) {
-        state.fireworksAnimation = requestAnimationFrame(animateFireworks);
+        if (index === 0) {
+          createFireworkBurst(x, y, overtakeCount);
+          startAnimation();
+        } else {
+          window.setTimeout(() => {
+            createFireworkBurst(x, y, overtakeCount);
+            startAnimation();
+          }, index * 160);
+        }
       }
     }
 
-    function countNewOvertakes(previousCount, nextCount) {
-      if (!state.benchmarks.length || nextCount <= previousCount) return 0;
-      return state.benchmarks.filter(item => {
-        if (item.id === PETITION_ID) return false;
-        return item.signatures >= previousCount && item.signatures < nextCount;
-      }).length;
+    function getPassedBenchmarkIds(count) {
+      return new Set(
+        state.benchmarks
+          .filter(item => item.id !== PETITION_ID && item.signatures < count)
+          .map(item => item.id)
+      );
+    }
+
+    function updatePassedBenchmarks(count) {
+      const currentlyPassed = getPassedBenchmarkIds(count);
+      const newlyPassed = [...currentlyPassed].filter(id => !state.passedBenchmarkIds.has(id));
+      state.passedBenchmarkIds = currentlyPassed;
+      return newlyPassed;
     }
 
     function createOvertakeItem({ className, eyebrow, title, meta }) {
@@ -1221,7 +1237,6 @@
       const rank = rankPetition(count);
       els.rankNumber.textContent = ordinal(rank);
       els.rankText.textContent = `This petition is currently the ${ordinal(rank)} most signed petition of all time.`;
-      els.countCaption.textContent = `This petition is in the ${formatNumber.format(yMin)}-${formatNumber.format(yMax)} signature bracket.`;
       els.windowLabel.textContent = `Scale: ${formatNumber.format(yMin)} to ${formatNumber.format(yMax)} signatures (${formatNumber.format(rangeSize)} range)`;
 
       svg.appendChild(make("rect", {
@@ -1587,19 +1602,19 @@
         const json = await response.json();
         const attrs = json.data.attributes;
         const nextCount = Number(attrs.signature_count);
-        const previousCount = state.count;
-        const overtakeCount = state.hasLoadedLive ? countNewOvertakes(previousCount, nextCount) : 0;
+        const newlyPassed = state.hasLoadedLive ? updatePassedBenchmarks(nextCount) : [];
         state.title = attrs.action || state.title;
         state.status = attrs.state || state.status;
         state.lastChecked = new Date();
         state.count = nextCount;
+        if (!state.hasLoadedLive) updatePassedBenchmarks(nextCount);
         state.hasLoadedLive = true;
         els.petitionTitle.textContent = state.title;
         document.title = state.title;
         updateStatus(true, `${state.status} - checked ${formatTime.format(state.lastChecked)}`);
         els.footerNote.textContent = `Live count source: ${PETITION_JSON_URL}. Projection uses saved snapshots.`;
         renderChart();
-        if (overtakeCount > 0) triggerFireworks(overtakeCount);
+        if (newlyPassed.length > 0) triggerFireworks(newlyPassed.length);
       } catch (error) {
         updateStatus(false, "Could not update - showing last count");
         els.footerNote.textContent = `Last update failed: ${error.message}`;
