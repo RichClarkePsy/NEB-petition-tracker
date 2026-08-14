@@ -566,7 +566,7 @@
 
     .trend-metrics {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
       margin-bottom: 14px;
     }
@@ -810,12 +810,8 @@
           <p class="trend-intro" id="trendIntro">Building the trend from saved petition snapshots.</p>
           <div class="trend-metrics" aria-label="Trend summary">
             <div class="trend-metric">
-              <strong id="trendLatest">--</strong>
-              <span id="trendLatestLabel">Latest saved total</span>
-            </div>
-            <div class="trend-metric">
               <strong id="trendRate">--</strong>
-              <span>Trend over previous 30 days</span>
+              <span>30-day linear trend</span>
             </div>
             <div class="trend-metric">
               <strong id="trendProjection">--</strong>
@@ -830,13 +826,13 @@
             <span class="legend-key legend-actual"><span class="legend-line"></span>Actual signatures</span>
             <span class="legend-key legend-trend"><span class="legend-line"></span>30-day trend</span>
           </div>
-          <p class="trend-note">Forecast is a simple linear trend fitted to the previous 30 days, with a broad visual band for uncertainty.</p>
-          <p class="history-update-note" id="historyUpdateNote">Graph history updates every three hours.</p>
+          <p class="trend-note">Forecast fits a straight line to saved snapshot totals from the last 30 calendar days. Shaded area shows a 95% prediction interval.</p>
+          <p class="history-update-note" id="historyUpdateNote">Projection uses saved petition snapshots.</p>
         </section>
       </div>
     </div>
 
-    <p class="foot" id="footerNote">The page checks the official UK Parliament petition JSON every 30 seconds.</p>
+    <p class="foot" id="footerNote">The projection uses saved snapshots. Use Refresh now to check the official live count.</p>
     <p class="site-credit">Made by <a href="https://www.linkedin.com/in/richard-clarke-ba627a3a5/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3BYa%2FnjQQCRwODgrupsiveTw%3D%3D" target="_blank" rel="noreferrer">Richard Clarke</a>.</p>
   </main>
   <canvas class="fireworks-canvas" id="fireworksCanvas" aria-hidden="true"></canvas>
@@ -845,8 +841,6 @@
     const PETITION_ID = "767687";
     const PETITION_URL = `https://petition.parliament.uk/petitions/${PETITION_ID}`;
     const PETITION_JSON_URL = `${PETITION_URL}.json`;
-    const POLL_MS = 30000;
-    const HISTORY_REFRESH_MS = 5 * 60 * 1000;
     const DEBATE_THRESHOLD = 100000;
     const DEADLINE = new Date(2026, 10, 20);
 
@@ -878,8 +872,6 @@
       ladder: document.getElementById("ladder"),
       trendIntro: document.getElementById("trendIntro"),
       historyUpdateNote: document.getElementById("historyUpdateNote"),
-      trendLatest: document.getElementById("trendLatest"),
-      trendLatestLabel: document.getElementById("trendLatestLabel"),
       trendRate: document.getElementById("trendRate"),
       trendProjection: document.getElementById("trendProjection"),
       trendChart: document.getElementById("trendChart"),
@@ -1197,7 +1189,6 @@
       svg.appendChild(make("desc", { id: "chartDesc" }, "A vertical signature scale showing this petition count, petitions already passed, and upcoming comparison targets."));
 
       const count = state.count;
-      const next = findNextTarget(count);
       const { yMin, yMax, rangeSize } = getRange(count);
       const tickStep = getTickStep(rangeSize);
       const visible = state.benchmarks
@@ -1319,24 +1310,6 @@
       return { date, signatures };
     }
 
-    function getTrendPoints() {
-      const byTime = new Map();
-      for (const item of state.history) {
-        const point = normalizeHistoryPoint(item);
-        if (!point) continue;
-        byTime.set(point.date.toISOString(), point);
-      }
-
-      if (Number.isFinite(state.count)) {
-        byTime.set(new Date().toISOString(), {
-          date: new Date(),
-          signatures: state.count
-        });
-      }
-
-      return Array.from(byTime.values()).sort((a, b) => a.date - b.date);
-    }
-
     function getSavedHistoryPoints() {
       return state.history
         .map(normalizeHistoryPoint)
@@ -1344,12 +1317,21 @@
         .sort((a, b) => a.date - b.date);
     }
 
-    function calendarDayNumber(date) {
-      return Math.floor(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()) / 86400000);
+    function getDailySavedHistoryPoints() {
+      const byDay = new Map();
+      for (const point of getSavedHistoryPoints()) {
+        const day = calendarDayNumber(point.date);
+        const existing = byDay.get(day);
+        if (!existing || point.signatures >= existing.signatures) {
+          byDay.set(day, point);
+        }
+      }
+
+      return Array.from(byDay.values()).sort((a, b) => a.date - b.date);
     }
 
-    function daysBetween(start, end) {
-      return (end.getTime() - start.getTime()) / 86400000;
+    function calendarDayNumber(date) {
+      return Math.floor(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()) / 86400000);
     }
 
     function trendScale(value, from, to, minPx, maxPx) {
@@ -1357,11 +1339,30 @@
       return minPx + ((value - from) / (to - from)) * (maxPx - minPx);
     }
 
+    function tCritical95(degreesFreedom) {
+      const table = {
+        1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571,
+        6: 2.447, 7: 2.365, 8: 2.306, 9: 2.262, 10: 2.228,
+        11: 2.201, 12: 2.179, 13: 2.160, 14: 2.145, 15: 2.131,
+        16: 2.120, 17: 2.110, 18: 2.101, 19: 2.093, 20: 2.086,
+        21: 2.080, 22: 2.074, 23: 2.069, 24: 2.064, 25: 2.060,
+        26: 2.056, 27: 2.052, 28: 2.048, 29: 2.045, 30: 2.042
+      };
+
+      if (degreesFreedom <= 0) return 0;
+      if (degreesFreedom <= 30) return table[Math.round(degreesFreedom)];
+      if (degreesFreedom <= 40) return 2.021;
+      if (degreesFreedom <= 60) return 2.000;
+      if (degreesFreedom <= 120) return 1.980;
+      return 1.960;
+    }
+
     function linearRegression(points) {
       if (points.length < 2) return null;
       const baseDay = calendarDayNumber(points[0].date);
       const xs = points.map(point => calendarDayNumber(point.date) - baseDay);
       const ys = points.map(point => point.signatures);
+      const n = points.length;
       const xMean = xs.reduce((sum, value) => sum + value, 0) / xs.length;
       const yMean = ys.reduce((sum, value) => sum + value, 0) / ys.length;
       const numerator = xs.reduce((sum, value, index) => sum + ((value - xMean) * (ys[index] - yMean)), 0);
@@ -1369,12 +1370,39 @@
       if (denominator === 0) return null;
       const slope = numerator / denominator;
       const intercept = yMean - (slope * xMean);
+      const residualSumSquares = xs.reduce((sum, value, index) => {
+        const predicted = intercept + (slope * value);
+        return sum + ((ys[index] - predicted) ** 2);
+      }, 0);
+      const degreesFreedom = n - 2;
+      const residualStandardError = degreesFreedom > 0
+        ? Math.sqrt(residualSumSquares / degreesFreedom)
+        : 0;
+
       return {
         baseDay,
+        intercept,
+        xMean,
+        sampleSize: n,
         slope,
+        sumSquaredXDistance: denominator,
+        residualStandardError,
         predict(date) {
           const x = calendarDayNumber(date) - baseDay;
           return intercept + (slope * x);
+        },
+        predictionInterval(date) {
+          const x = calendarDayNumber(date) - baseDay;
+          const predicted = intercept + (slope * x);
+          const standardError = residualStandardError * Math.sqrt(
+            1 + (1 / n) + (((x - xMean) ** 2) / denominator)
+          );
+          const margin = tCritical95(degreesFreedom) * standardError;
+          return {
+            predicted,
+            lower: predicted - margin,
+            upper: predicted + margin
+          };
         }
       };
     }
@@ -1402,11 +1430,11 @@
       svg.appendChild(make("title", { id: "trendTitle" }, "When could the petition reach 100,000 signatures?"));
       svg.appendChild(make("desc", { id: "trendDesc" }, "A line chart showing saved signature counts, a thirty day trend, the 100,000 signature threshold, and the petition closing date."));
 
-      const savedPoints = getSavedHistoryPoints();
+      const savedPoints = getDailySavedHistoryPoints();
       const lastSaved = savedPoints[savedPoints.length - 1] || null;
       els.historyUpdateNote.textContent = lastSaved
-        ? `Graph history updates every three hours. Last saved update: ${formatDate.format(lastSaved.date)} at ${formatTime.format(lastSaved.date)}.`
-        : "Graph history updates every three hours once the site is running on GitHub.";
+        ? `Last saved snapshot: ${formatDate.format(lastSaved.date)} at ${formatTime.format(lastSaved.date)}.`
+        : "Add saved snapshots to history.json to build the projection.";
 
       const points = savedPoints;
       if (points.length < 2) {
@@ -1416,17 +1444,43 @@
 
       const latest = points[points.length - 1];
       const latestDay = calendarDayNumber(latest.date);
-      const recent = points.filter(point => calendarDayNumber(point.date) > latestDay - 29);
+      const recent = points.filter(point => calendarDayNumber(point.date) >= latestDay - 30);
       const trendSource = recent.length >= 2 ? recent : points.slice(-Math.min(points.length, 10));
       const trend = linearRegression(trendSource);
       const projectedAtClose = trend
-        ? latest.signatures + (trend.slope * daysBetween(latest.date, DEADLINE))
+        ? trend.predict(DEADLINE)
         : latest.signatures;
       const chartEnd = new Date(2027, 0, 1);
       const xMin = points[0].date;
       const xMax = latest.date > chartEnd ? new Date(latest.date.getTime() + 86400000) : chartEnd;
+      let trendLinePoints = [];
+      let predictionBandPoints = [];
+
+      if (trend) {
+        const trendStart = trendSource[0].date;
+        const trendDates = [trendStart, latest.date, DEADLINE, xMax].filter((date, index, dates) => {
+          return index === 0 || date.getTime() !== dates[index - 1].getTime();
+        });
+        trendLinePoints = trendDates.map(date => ({
+          date,
+          signatures: Math.max(0, trend.predict(date))
+        }));
+        predictionBandPoints = trendDates.map(date => {
+          const interval = trend.predictionInterval(date);
+          return {
+            date,
+            signatures: Math.max(0, interval.predicted),
+            lower: Math.max(0, interval.lower),
+            upper: Math.max(0, interval.upper)
+          };
+        });
+      }
+
       const highestActual = Math.max(...points.map(point => point.signatures));
-      const yMax = Math.ceil((Math.max(DEBATE_THRESHOLD, highestActual, projectedAtClose) * 1.12) / 25000) * 25000;
+      const highestPrediction = predictionBandPoints.length
+        ? Math.max(...predictionBandPoints.map(point => point.upper))
+        : projectedAtClose;
+      const yMax = Math.ceil((Math.max(DEBATE_THRESHOLD, highestActual, projectedAtClose, highestPrediction) * 1.12) / 25000) * 25000;
       const yMin = 0;
       const left = 88;
       const right = 900;
@@ -1463,26 +1517,14 @@
       svg.appendChild(make("text", { x: deadlineX + 8, y: top + 38, class: "deadline-label" }, "Petition closes"));
 
       if (trend) {
-        const trendStart = trendSource[0].date;
-        const trendEnd = xMax;
-        const projectFromLatest = date => latest.signatures + (trend.slope * daysBetween(latest.date, date));
-        const trendDates = [trendStart, latest.date, DEADLINE, trendEnd].filter((date, index, dates) => {
-          return index === 0 || date.getTime() !== dates[index - 1].getTime();
-        });
-        const trendLinePoints = trendDates.map(date => ({
-          date,
-          signatures: Math.max(0, projectFromLatest(date))
+        const upper = predictionBandPoints.map(point => ({
+          date: point.date,
+          signatures: Math.min(yMax, point.upper)
         }));
-        const upper = trendLinePoints.map((point, index) => {
-          const days = Math.max(0, (point.date - trendStart) / 86400000);
-          const band = Math.max(2500, days * Math.max(40, Math.abs(trend.slope)) * 0.14);
-          return { date: point.date, signatures: Math.min(yMax, point.signatures + band + (index === 0 ? 0 : 1500)) };
-        });
-        const lower = trendLinePoints.slice().reverse().map((point, index) => {
-          const days = Math.max(0, (point.date - trendStart) / 86400000);
-          const band = Math.max(2500, days * Math.max(40, Math.abs(trend.slope)) * 0.14);
-          return { date: point.date, signatures: Math.max(0, point.signatures - band - (index === 0 ? 1500 : 0)) };
-        });
+        const lower = predictionBandPoints.slice().reverse().map(point => ({
+          date: point.date,
+          signatures: Math.max(0, point.lower)
+        }));
         const bandPath = [
           ...upper.map((point, index) => `${index === 0 ? "M" : "L"}${xFor(point.date).toFixed(1)},${yFor(point.signatures).toFixed(1)}`),
           ...lower.map(point => `L${xFor(point.date).toFixed(1)},${yFor(point.signatures).toFixed(1)}`),
@@ -1497,9 +1539,6 @@
       svg.appendChild(make("path", { d: linePath(points, xFor, yFor), class: "trend-actual" }));
       svg.appendChild(make("circle", { cx: xFor(latest.date), cy: yFor(latest.signatures), r: 7, class: "trend-dot" }));
 
-      els.trendLatest.textContent = formatNumber.format(latest.signatures);
-      els.trendLatestLabel.textContent = `Latest total on ${formatDate.format(latest.date)}`;
-
       if (trend) {
         els.trendRate.textContent = `${formatNumber.format(Math.round(trend.slope))}/day`;
         els.trendProjection.textContent = formatNumber.format(Math.round(projectedAtClose));
@@ -1507,8 +1546,8 @@
         if (latest.signatures >= DEBATE_THRESHOLD) {
           els.trendIntro.textContent = "This petition has passed the 100,000 signature debate threshold.";
         } else if (trend.slope > 0) {
-          const daysToThreshold = (DEBATE_THRESHOLD - latest.signatures) / trend.slope;
-          const reachDate = new Date(latest.date.getTime() + (daysToThreshold * 86400000));
+          const thresholdDay = trend.baseDay + ((DEBATE_THRESHOLD - trend.intercept) / trend.slope);
+          const reachDate = new Date(thresholdDay * 86400000);
           const daysBeforeClose = Math.ceil((DEADLINE - reachDate) / 86400000);
           const closePhrase = daysBeforeClose >= 0
             ? `${daysBeforeClose} days before closing date`
@@ -1532,6 +1571,10 @@
       const historyResponse = await fetch(`history.json?cache=${Date.now()}`, { cache: "no-store" });
       if (!historyResponse.ok) throw new Error(`Could not load history: HTTP ${historyResponse.status}`);
       state.history = await historyResponse.json();
+      const latestSaved = getDailySavedHistoryPoints().at(-1);
+      if (latestSaved && !state.hasLoadedLive) {
+        state.count = latestSaved.signatures;
+      }
       renderTrendChart();
     }
 
@@ -1553,7 +1596,7 @@
         els.petitionTitle.textContent = state.title;
         document.title = state.title;
         updateStatus(true, `${state.status} - checked ${formatTime.format(state.lastChecked)}`);
-        els.footerNote.textContent = `Live source: ${PETITION_JSON_URL}`;
+        els.footerNote.textContent = `Live source checked manually: ${PETITION_JSON_URL}`;
         renderChart();
         renderTrendChart();
         if (overtakeCount > 0) triggerFireworks(overtakeCount);
@@ -1577,13 +1620,7 @@
         }
         renderChart();
         renderTrendChart();
-        await updatePetition();
-        setInterval(updatePetition, POLL_MS);
-        setInterval(() => {
-          loadHistory().catch(() => {
-            renderTrendChart();
-          });
-        }, HISTORY_REFRESH_MS);
+        updateStatus(true, "Showing latest saved snapshot");
       } catch (error) {
         updateStatus(false, error.message);
       }

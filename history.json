@@ -420,21 +420,15 @@
     "source": "snapshot"
   },
   {
-    "observed_at": "2026-08-13T09:00:55.390Z",
-    "signatures": 66553,
-    "source_updated_at": "2026-08-13T08:58:10.000Z",
-    "source": "github-action"
-  },
-  {
     "observed_at": "2026-08-13T15:04:30.000Z",
     "signatures": 66847,
     "source_updated_at": "2026-08-13T15:04:30.000Z",
     "source": "snapshot"
   },
   {
-    "observed_at": "2026-08-13T19:21:33.096Z",
-    "signatures": 67322,
-    "source_updated_at": "2026-08-13T19:20:40.000Z",
-    "source": "github-action"
+    "observed_at": "2026-08-14T14:23:00.000Z",
+    "signatures": 72382,
+    "source_updated_at": "2026-08-14T14:23:00.000Z",
+    "source": "snapshot"
   }
 ]
