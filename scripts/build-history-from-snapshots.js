@@ -42,25 +42,6 @@ function mergeByTimestamp(points) {
   });
 }
 
-function readExistingHistory() {
-  if (!fs.existsSync(outputPath)) return [];
-
-  return readJson(outputPath)
-    .map(point => {
-      const signatures = Number(point.signatures);
-      const observedAt = point.observed_at || point.date || point.timestamp;
-      if (!observedAt || !Number.isFinite(signatures)) return null;
-
-      return {
-        observed_at: new Date(observedAt).toISOString(),
-        signatures,
-        source_updated_at: point.source_updated_at ? new Date(point.source_updated_at).toISOString() : null,
-        source: point.source || "history"
-      };
-    })
-    .filter(Boolean);
-}
-
 if (!fs.existsSync(snapshotsDir)) {
   throw new Error(`Snapshot folder not found: ${snapshotsDir}`);
 }
@@ -70,7 +51,7 @@ const points = fs.readdirSync(snapshotsDir)
   .map(file => toHistoryPoint(path.join(snapshotsDir, file)))
   .filter(Boolean);
 
-const history = mergeByTimestamp([...readExistingHistory(), ...points]);
+const history = mergeByTimestamp(points);
 fs.writeFileSync(outputPath, `${JSON.stringify(history, null, 2)}\n`);
 
 console.log(`Wrote ${history.length} history points to ${outputPath}`);
