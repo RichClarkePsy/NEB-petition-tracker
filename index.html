@@ -832,7 +832,7 @@
       </div>
     </div>
 
-    <p class="foot" id="footerNote">The projection uses saved snapshots. Use Refresh now to check the official live count.</p>
+    <p class="foot" id="footerNote">The live count checks the official UK Parliament petition JSON every 3 seconds. The projection uses saved snapshots.</p>
     <p class="site-credit">Made by <a href="https://www.linkedin.com/in/richard-clarke-ba627a3a5/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3BYa%2FnjQQCRwODgrupsiveTw%3D%3D" target="_blank" rel="noreferrer">Richard Clarke</a>.</p>
   </main>
   <canvas class="fireworks-canvas" id="fireworksCanvas" aria-hidden="true"></canvas>
@@ -841,6 +841,7 @@
     const PETITION_ID = "767687";
     const PETITION_URL = `https://petition.parliament.uk/petitions/${PETITION_ID}`;
     const PETITION_JSON_URL = `${PETITION_URL}.json`;
+    const LIVE_POLL_MS = 3000;
     const DEBATE_THRESHOLD = 100000;
     const DEADLINE = new Date(2026, 10, 20);
 
@@ -1596,9 +1597,8 @@
         els.petitionTitle.textContent = state.title;
         document.title = state.title;
         updateStatus(true, `${state.status} - checked ${formatTime.format(state.lastChecked)}`);
-        els.footerNote.textContent = `Live source checked manually: ${PETITION_JSON_URL}`;
+        els.footerNote.textContent = `Live count source: ${PETITION_JSON_URL}. Projection uses saved snapshots.`;
         renderChart();
-        renderTrendChart();
         if (overtakeCount > 0) triggerFireworks(overtakeCount);
       } catch (error) {
         updateStatus(false, "Could not update - showing last count");
@@ -1620,7 +1620,8 @@
         }
         renderChart();
         renderTrendChart();
-        updateStatus(true, "Showing latest saved snapshot");
+        await updatePetition();
+        setInterval(updatePetition, LIVE_POLL_MS);
       } catch (error) {
         updateStatus(false, error.message);
       }
