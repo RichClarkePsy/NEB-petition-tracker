@@ -106,6 +106,58 @@
       letter-spacing: 0.02em;
     }
 
+    .deadline-stack {
+      display: grid;
+      flex: 0 0 auto;
+      min-width: min(100%, 260px);
+    }
+
+    .deadline-banner {
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      margin: 10px 0 0;
+      height: 1.55em;
+      color: var(--target-text-orange);
+      font-size: 0.98rem;
+      font-weight: 900;
+      line-height: 1.28;
+      white-space: nowrap;
+    }
+
+    .deadline-banner-text {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      display: inline-block;
+      white-space: nowrap;
+      animation: deadline-banner-slide 10s cubic-bezier(0.2, 0.78, 0.25, 1) both;
+      will-change: transform, opacity;
+    }
+
+    @keyframes deadline-banner-slide {
+      0% {
+        opacity: 0;
+        transform: translateX(70vw);
+      }
+
+      18%,
+      80% {
+        opacity: 1;
+        transform: translateX(-50%);
+      }
+
+      94% {
+        opacity: 1;
+        transform: translateX(calc(-100% - 70vw));
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateX(calc(-100% - 70vw));
+      }
+    }
+
     .dot {
       width: 10px;
       height: 10px;
@@ -522,6 +574,13 @@
       line-height: 1.45;
     }
 
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
     .site-credit {
       color: var(--muted);
       font-size: 0.88rem;
@@ -747,8 +806,13 @@
         <p class="kicker">Petition live tracker</p>
         <div class="title-row">
           <h1 id="petitionTitle">Hold a UK-wide briefing on climate and nature risks</h1>
-          <div class="deadline-badge" id="deadlineBadge">Days until 20 Nov deadline</div>
+          <div class="deadline-stack">
+            <div class="deadline-badge" id="deadlineBadge">Days until 20 Nov deadline</div>
+          </div>
         </div>
+        <p class="deadline-banner" aria-live="polite">
+          <span class="deadline-banner-text" id="deadlineBanner">Sign the petition! Link below</span>
+        </p>
       </div>
       <div class="status-strip" aria-live="polite">
         <span class="dot" id="statusDot" aria-hidden="true"></span>
@@ -832,6 +896,10 @@
     </div>
 
     <p class="foot" id="footerNote">The live count checks the official UK Parliament petition JSON every 3 seconds. The projection uses saved snapshots.</p>
+    <nav class="footer-links" aria-label="National Emergency Briefing links">
+      <a class="button-link" href="https://www.nebriefing.org/" target="_blank" rel="noreferrer">National Emergency Briefing</a>
+      <a class="button-link" href="https://www.nebriefing.org/screening-map" target="_blank" rel="noreferrer">Screening map</a>
+    </nav>
     <p class="site-credit">Made by <a href="https://www.linkedin.com/in/richard-clarke-ba627a3a5/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3BYa%2FnjQQCRwODgrupsiveTw%3D%3D" target="_blank" rel="noreferrer">Richard Clarke</a>.</p>
   </main>
   <canvas class="fireworks-canvas" id="fireworksCanvas" aria-hidden="true"></canvas>
@@ -853,15 +921,26 @@
       status: "open",
       lastChecked: null,
       hasLoadedLive: false,
+      bannerIndex: 0,
+      bannerTimer: null,
       passedBenchmarkIds: new Set(),
       fireworks: [],
       fireworksAnimation: null,
       hasCelebratedDebateThreshold: false
     };
 
+    const DEADLINE_BANNERS = [
+      "Sign the petition! Link below",
+      "Live stream this page, algorithms love a live stream",
+      "Has your neighbour signed yet? Ask them!",
+      "Does your MP know you've signed this? Tell them!",
+      "Have you seen the People's National Briefing film yet? Link below for screenings"
+    ];
+
     const els = {
       petitionTitle: document.getElementById("petitionTitle"),
       deadlineBadge: document.getElementById("deadlineBadge"),
+      deadlineBanner: document.getElementById("deadlineBanner"),
       signatureCount: document.getElementById("signatureCount"),
       rankNumber: document.getElementById("rankNumber"),
       rankText: document.getElementById("rankText"),
@@ -1018,6 +1097,21 @@
       const days = Math.max(0, Math.ceil((DEADLINE.getTime() - now.getTime()) / 86400000));
       const dayText = days === 1 ? "day" : "days";
       els.deadlineBadge.textContent = `${days} ${dayText} until 20 Nov deadline`;
+    }
+
+    function rotateDeadlineBanner() {
+      state.bannerIndex = (state.bannerIndex + 1) % DEADLINE_BANNERS.length;
+      els.deadlineBanner.textContent = DEADLINE_BANNERS[state.bannerIndex];
+      els.deadlineBanner.style.animation = "none";
+      els.deadlineBanner.offsetHeight;
+      els.deadlineBanner.style.animation = "";
+    }
+
+    function startDeadlineBannerRotation() {
+      els.deadlineBanner.textContent = DEADLINE_BANNERS[state.bannerIndex];
+      if (!state.bannerTimer) {
+        state.bannerTimer = window.setInterval(rotateDeadlineBanner, 10000);
+      }
     }
 
     function resizeFireworksCanvas() {
@@ -1698,6 +1792,7 @@
       await updatePetition();
     });
     resizeFireworksCanvas();
+    startDeadlineBannerRotation();
     window.addEventListener("resize", () => {
       resizeFireworksCanvas();
       renderChart();
