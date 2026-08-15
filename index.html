@@ -937,6 +937,18 @@
       "Have you seen the People's National Briefing film yet? Link below for screenings"
     ];
 
+    const LIVE_BENCHMARK_IDS = [
+      "759783",
+      "757233",
+      "759385",
+      "762640",
+      "755980",
+      "763161",
+      "764785",
+      "764553",
+      "761127"
+    ];
+
     const els = {
       petitionTitle: document.getElementById("petitionTitle"),
       deadlineBadge: document.getElementById("deadlineBadge"),
@@ -1063,18 +1075,20 @@
     }
 
     function findNextTarget(count) {
-      return state.benchmarks.find(item => item.id !== PETITION_ID && item.signatures >= count) || null;
+      return findNextTargets(count, 1)[0] || null;
     }
 
     function findNextTargets(count, limit = 3) {
       return state.benchmarks
         .filter(item => item.id !== PETITION_ID && item.signatures >= count)
+        .sort((a, b) => a.signatures - b.signatures)
         .slice(0, limit);
     }
 
     function findJustPassed(count) {
-      const passed = state.benchmarks.filter(item => item.id !== PETITION_ID && item.signatures < count);
-      return passed[passed.length - 1] || null;
+      return state.benchmarks
+        .filter(item => item.id !== PETITION_ID && item.signatures < count)
+        .sort((a, b) => b.signatures - a.signatures)[0] || null;
     }
 
     function ordinal(value) {
@@ -1112,6 +1126,51 @@
       if (!state.bannerTimer) {
         state.bannerTimer = window.setInterval(rotateDeadlineBanner, 10000);
       }
+    }
+
+    function petitionJsonUrl(id) {
+      return `https://petition.parliament.uk/petitions/${id}.json`;
+    }
+
+    function petitionYear(attrs) {
+      const date = new Date(attrs.opened_at || attrs.created_at || attrs.updated_at);
+      return Number.isNaN(date.getTime()) ? "2026" : String(date.getFullYear());
+    }
+
+    function applyLiveBenchmark(json, fallbackId) {
+      const attrs = json && json.data && json.data.attributes ? json.data.attributes : {};
+      const id = String(json && json.data && json.data.id ? json.data.id : fallbackId);
+      const signatures = Number(attrs.signature_count);
+      if (!id || !Number.isFinite(signatures)) return false;
+
+      const existing = state.benchmarks.find(item => item.id === id);
+      const next = {
+        id,
+        signatures,
+        year: existing ? existing.year : petitionYear(attrs),
+        title: attrs.action || (existing && existing.title) || "Live petition",
+        source: "current",
+        liveState: attrs.state || (existing && existing.liveState) || null,
+        liveUpdatedAt: attrs.updated_at || null
+      };
+
+      if (existing) {
+        Object.assign(existing, next);
+      } else {
+        state.benchmarks.push(next);
+      }
+      return true;
+    }
+
+    async function updateLiveBenchmarks() {
+      const requests = LIVE_BENCHMARK_IDS.map(async id => {
+        const response = await fetch(`${petitionJsonUrl(id)}?cache=${Date.now()}`, { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status} for petition ${id}`);
+        return applyLiveBenchmark(await response.json(), id);
+      });
+
+      const results = await Promise.allSettled(requests);
+      return results.filter(result => result.status === "fulfilled" && result.value).length;
     }
 
     function resizeFireworksCanvas() {
@@ -1741,6 +1800,7 @@
         const json = await response.json();
         const attrs = json.data.attributes;
         const nextCount = Number(attrs.signature_count);
+        const liveBenchmarkCount = await updateLiveBenchmarks();
         const newlyPassed = state.hasLoadedLive ? updatePassedBenchmarks(nextCount) : [];
         const crossedDebateThreshold = state.count < DEBATE_THRESHOLD && nextCount >= DEBATE_THRESHOLD;
         state.title = attrs.action || state.title;
@@ -1752,7 +1812,7 @@
         els.petitionTitle.textContent = state.title;
         document.title = state.title;
         updateStatus(true, `${state.status} - checked ${formatTime.format(state.lastChecked)}`);
-        els.footerNote.textContent = `Live count source: ${PETITION_JSON_URL}. Projection uses saved snapshots.`;
+        els.footerNote.textContent = `Live count source: ${PETITION_JSON_URL}. ${liveBenchmarkCount} comparison petitions refresh on the same cycle. Projection uses saved snapshots.`;
         renderChart();
         if (crossedDebateThreshold) triggerDebateThresholdFireworks();
         if (newlyPassed.length > 0) triggerFireworks(newlyPassed.length);
