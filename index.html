@@ -924,8 +924,7 @@
       bannerTimer: null,
       passedBenchmarkIds: new Set(),
       fireworks: [],
-      fireworksAnimation: null,
-      hasCelebratedDebateThreshold: false
+      fireworksAnimation: null
     };
 
     const DEADLINE_BANNERS = [
@@ -1283,44 +1282,6 @@
           }, index * 420);
         }
       }
-    }
-
-    function triggerDebateThresholdFireworks() {
-      if (state.hasCelebratedDebateThreshold) return;
-      state.hasCelebratedDebateThreshold = true;
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-      if (!els.fireworksCanvas.width || !els.fireworksCanvas.height) resizeFireworksCanvas();
-
-      const colours = ["#ffd447", "#ff7a45", "#39a7ff", "#52d273", "#ffffff", "#ee0000"];
-      const durationMs = 10000;
-      const intervalMs = 220;
-      const startedAt = window.performance.now();
-
-      const launchCelebration = () => {
-        const elapsed = window.performance.now() - startedAt;
-        if (elapsed > durationMs) return;
-
-        const burstPairs = elapsed < 1600 ? 3 : 2;
-        for (let index = 0; index < burstPairs; index += 1) {
-          const x = window.innerWidth * (0.08 + Math.random() * 0.84);
-          const y = window.innerHeight * (0.10 + Math.random() * 0.52);
-          createFireworkBurst(x, y, 6, {
-            colours,
-            particleCount: 150 + Math.floor(Math.random() * 42),
-            minSpeed: 2.8,
-            maxSpeed: 9.8,
-            minLife: 92,
-            maxLife: 150,
-            minRadius: 2.1,
-            maxRadius: 6.8
-          });
-        }
-
-        startFireworksAnimation();
-        window.setTimeout(launchCelebration, intervalMs);
-      };
-
-      launchCelebration();
     }
 
     function getPassedBenchmarkIds(count) {
@@ -1807,7 +1768,6 @@
         const nextCount = Number(attrs.signature_count);
         const liveBenchmarkCount = await updateLiveBenchmarks();
         const newlyPassed = state.hasLoadedLive ? updatePassedBenchmarks(nextCount) : [];
-        const crossedDebateThreshold = state.count < DEBATE_THRESHOLD && nextCount >= DEBATE_THRESHOLD;
         state.title = attrs.action || state.title;
         state.status = attrs.state || state.status;
         state.lastChecked = new Date();
@@ -1820,7 +1780,6 @@
         updateStatus(true, `${state.status} - checked ${formatTime.format(state.lastChecked)}`);
         els.footerNote.textContent = `Live count source: ${PETITION_JSON_URL}. ${liveBenchmarkCount} comparison petitions refresh on the same cycle. Projection uses saved snapshots.`;
         renderChart();
-        if (crossedDebateThreshold) triggerDebateThresholdFireworks();
         if (newlyPassed.length > 0) triggerFireworks(newlyPassed.length);
       } catch (error) {
         updateStatus(false, "Could not update - showing last count");
