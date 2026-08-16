@@ -270,8 +270,7 @@
       color: #8a8a8a;
     }
 
-    .split-count.is-debate-reached .flap-value,
-    .split-count.is-debate-reached .separator {
+    .flap.is-threshold-digit .flap-value {
       color: var(--green);
     }
 
@@ -1047,7 +1046,6 @@
       const formatted = formatLiveCount(count);
       const plainFormatted = formatNumber.format(count);
       els.signatureCount.setAttribute("aria-label", `${plainFormatted} signatures`);
-      els.signatureCount.classList.toggle("is-debate-reached", count >= DEBATE_THRESHOLD);
       const previous = state.previousDisplay;
       els.signatureCount.replaceChildren();
 
@@ -1055,6 +1053,10 @@
         const character = formatted[index];
         const flap = document.createElement("span");
         flap.className = character === "," ? "separator" : "flap";
+
+        if (count >= DEBATE_THRESHOLD && index === 0 && character !== ",") {
+          flap.classList.add("is-threshold-digit");
+        }
 
         if (index === 0 && character === "0") {
           flap.classList.add("is-leading-zero");
