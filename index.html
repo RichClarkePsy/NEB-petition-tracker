@@ -882,7 +882,7 @@
             </div>
           </div>
           <svg class="trend-svg" id="trendChart" viewBox="0 0 940 470" role="img" aria-labelledby="trendTitle trendDesc">
-            <title id="trendTitle">When could the petition reach 100,000 signatures?</title>
+            <title id="trendTitle">Where could the petition finish by 20 November 2026?</title>
             <desc id="trendDesc">A line chart showing saved signature counts, a thirty day trend, the 100,000 signature threshold, and the petition closing date.</desc>
           </svg>
           <div class="trend-legend" aria-hidden="true">
@@ -908,7 +908,7 @@
     const PETITION_ID = "767687";
     const PETITION_URL = `https://petition.parliament.uk/petitions/${PETITION_ID}`;
     const PETITION_JSON_URL = `${PETITION_URL}.json`;
-    const LIVE_POLL_MS = 3000;
+    const LIVE_POLL_MS = 15000;
     const DEBATE_THRESHOLD = 100000;
     const DEADLINE = new Date(2026, 10, 20);
 
@@ -936,6 +936,7 @@
       "Does your MP know you've signed this? Tell them!",
       "Have you seen the People's National Briefing film yet? Link below for screenings"
     ];
+    const DEBATE_REACHED_BANNER = "Woohoo 100,000! Next stop 1,000,000!";
 
     const LIVE_BENCHMARK_IDS = [
       "759783",
@@ -1114,15 +1115,28 @@
     }
 
     function rotateDeadlineBanner() {
-      state.bannerIndex = (state.bannerIndex + 1) % DEADLINE_BANNERS.length;
-      els.deadlineBanner.textContent = DEADLINE_BANNERS[state.bannerIndex];
+      const banners = getDeadlineBanners();
+      state.bannerIndex = (state.bannerIndex + 1) % banners.length;
+      els.deadlineBanner.textContent = banners[state.bannerIndex];
       els.deadlineBanner.style.animation = "none";
       els.deadlineBanner.offsetHeight;
       els.deadlineBanner.style.animation = "";
     }
 
+    function getDeadlineBanners() {
+      return state.count >= DEBATE_THRESHOLD
+        ? [...DEADLINE_BANNERS, DEBATE_REACHED_BANNER]
+        : DEADLINE_BANNERS;
+    }
+
+    function renderDeadlineBanner() {
+      const banners = getDeadlineBanners();
+      state.bannerIndex %= banners.length;
+      els.deadlineBanner.textContent = banners[state.bannerIndex];
+    }
+
     function startDeadlineBannerRotation() {
-      els.deadlineBanner.textContent = DEADLINE_BANNERS[state.bannerIndex];
+      renderDeadlineBanner();
       if (!state.bannerTimer) {
         state.bannerTimer = window.setInterval(rotateDeadlineBanner, 10000);
       }
@@ -1641,7 +1655,7 @@
     function renderTrendChart() {
       const svg = els.trendChart;
       svg.replaceChildren();
-      svg.appendChild(make("title", { id: "trendTitle" }, "When could the petition reach 100,000 signatures?"));
+      svg.appendChild(make("title", { id: "trendTitle" }, "Where could the petition finish by 20 November 2026?"));
       svg.appendChild(make("desc", { id: "trendDesc" }, "A line chart showing saved signature counts, a thirty day trend, the 100,000 signature threshold, and the petition closing date."));
 
       const savedPoints = getDailySavedHistoryPoints();
@@ -1756,23 +1770,11 @@
       if (trend) {
         els.trendRate.textContent = `${formatNumber.format(Math.round(trend.slope))}/day`;
         els.trendProjection.textContent = formatNumber.format(Math.round(projectedAtClose));
-
-        if (latest.signatures >= DEBATE_THRESHOLD) {
-          els.trendIntro.textContent = "This petition has passed the 100,000 signature debate threshold.";
-        } else if (trend.slope > 0) {
-          const thresholdDay = trend.baseDay + ((DEBATE_THRESHOLD - trend.intercept) / trend.slope);
-          const reachDate = new Date(thresholdDay * 86400000);
-          const daysBeforeClose = Math.ceil((DEADLINE - reachDate) / 86400000);
-          const closePhrase = daysBeforeClose >= 0
-            ? `${daysBeforeClose} days before closing date`
-            : `${Math.abs(daysBeforeClose)} days after closing date`;
-          els.trendIntro.textContent = `30-day trend reaches 100,000 around the ${formatDate.format(reachDate)} (${closePhrase}).`;
-        } else {
-          els.trendIntro.textContent = "The recent trend is flat, so the 100,000 threshold cannot be projected from the current rate.";
-        }
+        els.trendIntro.textContent = `At the current 30-day trend, this petition is projected to finish around ${formatNumber.format(Math.round(projectedAtClose))} signatures on ${formatDate.format(DEADLINE)}.`;
       } else {
         els.trendRate.textContent = "--";
         els.trendProjection.textContent = "--";
+        els.trendIntro.textContent = "Add at least two saved snapshots to project the closing total.";
       }
     }
 
@@ -1788,6 +1790,7 @@
       const latestSaved = getDailySavedHistoryPoints().at(-1);
       if (latestSaved && !state.hasLoadedLive) {
         state.count = latestSaved.signatures;
+        renderDeadlineBanner();
       }
       renderTrendChart();
     }
@@ -1809,6 +1812,7 @@
         state.count = nextCount;
         if (!state.hasLoadedLive) updatePassedBenchmarks(nextCount);
         state.hasLoadedLive = true;
+        renderDeadlineBanner();
         els.petitionTitle.textContent = state.title;
         document.title = state.title;
         updateStatus(true, `${state.status} - checked ${formatTime.format(state.lastChecked)}`);
