@@ -1583,6 +1583,12 @@
       return 1.960;
     }
 
+    function getTrendTickStep(yMax) {
+      if (yMax <= 200000) return 25000;
+      if (yMax <= 600000) return 50000;
+      return 100000;
+    }
+
     function linearRegression(points) {
       if (points.length < 2) return null;
       const baseDay = calendarDayNumber(points[0].date);
@@ -1714,8 +1720,9 @@
       const bottom = 392;
       const xFor = date => trendScale(date.getTime(), xMin.getTime(), xMax.getTime(), left, right);
       const yFor = value => bottom - trendScale(value, yMin, yMax, 0, bottom - top);
+      const yTickStep = getTrendTickStep(yMax);
 
-      for (let value = 0; value <= yMax; value += 25000) {
+      for (let value = 0; value <= yMax; value += yTickStep) {
         const y = yFor(value);
         svg.appendChild(make("line", { x1: left, x2: right, y1: y, y2: y, class: "trend-grid" }));
         svg.appendChild(make("text", { x: left - 12, y: y + 5, class: "trend-axis", "text-anchor": "end" }, formatNumber.format(value)));
