@@ -478,5 +478,11 @@
     "signatures": 111535,
     "source_updated_at": "2026-08-23T07:49:10.000Z",
     "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-08-24T07:58:20.000Z",
+    "signatures": 111864,
+    "source_updated_at": "2026-08-24T07:58:20.000Z",
+    "source": "snapshot"
   }
 ]
