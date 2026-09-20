@@ -550,5 +550,29 @@
     "signatures": 121967,
     "source_updated_at": "2026-09-12T09:42:00.000Z",
     "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-09-14T15:21:20.000Z",
+    "signatures": 122453,
+    "source_updated_at": "2026-09-14T15:21:20.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-09-15T18:18:40.000Z",
+    "signatures": 122712,
+    "source_updated_at": "2026-09-15T18:18:40.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-09-18T07:43:10.000Z",
+    "signatures": 123343,
+    "source_updated_at": "2026-09-18T07:43:10.000Z",
+    "source": "snapshot"
+  },
+  {
+    "observed_at": "2026-09-20T07:15:40.000Z",
+    "signatures": 123752,
+    "source_updated_at": "2026-09-20T07:15:40.000Z",
+    "source": "snapshot"
   }
 ]
